@@ -9,10 +9,16 @@ async function seleccionarPeriodo(frame, mesNombre, anioObjetivo) {
   await inputPeriodo.click();
 
   const datepicker = frame.locator('.datepicker-months');
+  const abierto = await datepicker.isVisible({ timeout: 1500 }).catch(() => false);
+  if (!abierto) {
+    await inputPeriodo.evaluate((el) => {
+      if (window.$) window.$(el).datepicker('show');
+    });
+  }
   await datepicker.waitFor({ state: 'visible', timeout: 10000 });
 
   // Ajustar año si el año mostrado en el encabezado no coincide con anioObjetivo
-  const yearSwitch = datepicker.locator('th.datepicker-switch');
+  const yearSwitch = datepicker.locator('th.switch, th.datepicker-switch').first();
   for (let i = 0; i < 10; i++) {
     const anioActual = (await yearSwitch.innerText()).trim();
     if (anioActual === anioObjetivo) break;
@@ -43,8 +49,9 @@ async function verificarModalesAlerta(frame) {
 }
 
 (async () => {
+  const dryRun = process.argv.includes('--dry-run');
   const config = getConfig();
-  console.log(`Iniciando declaración NRUS 1611 para periodo ${config.periodo.mmAaaa}...`);
+  console.log(`Iniciando declaración NRUS 1611 para periodo ${config.periodo.mmAaaa}${dryRun ? ' [DRY-RUN]' : ''}...`);
 
   const browser = await chromium.launch({
     headless: config.opciones.headless,
@@ -102,6 +109,11 @@ async function verificarModalesAlerta(frame) {
     const cuota = await frame.locator('#casilla503').inputValue();
     const importePagar = await frame.locator('#casilla505').inputValue();
     console.log(`Categoría calculada: ${categoria} | Cuota mensual: S/ ${cuota} | Importe a pagar: S/ ${importePagar}`);
+
+    if (dryRun || process.env.DRY_RUN === 'true') {
+      console.log('DRY_RUN: Detenido antes de Agregar a bandeja.');
+      return;
+    }
 
     // 7. Agregar a bandeja y pasar a Presentar/Pagar/NPS
     await frame.getByRole('button', { name: /Agregar a bandeja/i }).click();
