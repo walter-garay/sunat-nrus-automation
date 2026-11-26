@@ -1,0 +1,13 @@
+{
+  "name": "sunat-nrus-automation",
+  "version": "1.0.0",
+  "description": "Automatización de declaración y pago NRUS (Formulario 1611) en SUNAT con Playwright",
+  "main": "pagar-nrus.js",
+  "scripts": {
+    "start": "node pagar-nrus.js"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "playwright": "^1.48.0"
+  }
+}
